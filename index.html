@@ -3,51 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Viewer</title>
+    <title>WebRTC Video Call</title>
 </head>
 <body>
-    <h2>Latest Captured Image</h2>
-    <img id="receivedImage" alt="Captured Image" style="max-width: 100%;">
+    <h2>WebRTC Video Call</h2>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <br>
+    <button onclick="startCall()">Start Call</button>
+    <button onclick="joinCall()">Join Call</button>
 
-    <script type="module">
-        // Load the image viewer script
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <script>
+        let peerConnection;
+        const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyD_Btusq5Y0xkkKcyJtMGpJILVctbAfwUc",
-            authDomain: "website-50137.firebaseapp.com",
-            databaseURL: "https://website-50137-default-rtdb.firebaseio.com/",
-            projectId: "website-50137",
-            storageBucket: "website-50137.appspot.com",
-            messagingSenderId: "488588300747",
-            appId: "1:488588300747:web:19e1e00246a851ba03e64e",
-            measurementId: "G-QH9EMHRV04"
-        };
+        async function startCall() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById("localVideo").srcObject = stream;
+                
+                peerConnection = new RTCPeerConnection(config);
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+                peerConnection.ontrack = (event) => {
+                    document.getElementById("remoteVideo").srcObject = event.streams[0];
+                };
 
-        let lastImageUrl = "";
-
-        function fetchLatestImage() {
-            const imagesRef = ref(db, "captured_images");
-            const latestImageQuery = query(imagesRef, limitToLast(1));
-
-            onValue(latestImageQuery, (snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const data = childSnapshot.val();
-                    if (data.image && data.image !== lastImageUrl) {
-                        lastImageUrl = data.image;
-                        document.getElementById("receivedImage").src = data.image;
-                    }
-                });
-            });
+            } catch (error) {
+                console.error("Camera error:", error);
+                alert("Please allow camera access and refresh the page.");
+            }
         }
 
-        fetchLatestImage();
+        async function joinCall() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById("localVideo").srcObject = stream;
+                
+                peerConnection = new RTCPeerConnection(config);
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+                peerConnection.ontrack = (event) => {
+                    document.getElementById("remoteVideo").srcObject = event.streams[0];
+                };
+
+            } catch (error) {
+                console.error("Camera error:", error);
+                alert("Please allow camera access and refresh the page.");
+            }
+        }
     </script>
 </body>
 </html>
